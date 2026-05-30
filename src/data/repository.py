@@ -26,13 +26,22 @@ def save_processed_snapshot(restaurants: list[Restaurant], path: str | Path) -> 
 
 
 def load_processed_snapshot(path: str | Path) -> list[Restaurant]:
+    import math
     target = Path(path)
     if not target.is_file():
         raise DatasetLoadError(f"Processed snapshot not found: {target}")
     frame = pd.read_parquet(target)
     if frame.empty:
         raise DatasetLoadError(f"Processed snapshot is empty: {target}")
-    return [Restaurant.model_validate(row) for row in frame.to_dict(orient="records")]
+    
+    restaurants = []
+    for row in frame.to_dict(orient="records"):
+        cleaned = {
+            k: (None if (isinstance(v, float) and math.isnan(v)) else v)
+            for k, v in row.items()
+        }
+        restaurants.append(Restaurant.model_validate(cleaned))
+    return restaurants
 
 
 class RestaurantRepository:
