@@ -25,8 +25,62 @@ def save_processed_snapshot(restaurants: list[Restaurant], path: str | Path) -> 
     logger.info("Saved processed snapshot (%s restaurants) to %s", len(restaurants), target)
 
 
+def _clean_snapshot_value(k: str, v: object) -> object:
+    if isinstance(v, (list, dict, tuple)):
+        return v
+    
+    # Robust check for Python/Numpy/Pandas NaN/Null
+    is_null = False
+    if v is None:
+        is_null = True
+    elif isinstance(v, float):
+        import math
+        if math.isnan(v):
+            is_null = True
+    else:
+        try:
+            import numpy as np
+            if isinstance(v, (np.float64, np.float32, np.float16)) and np.isnan(v):
+                is_null = True
+        except ImportError:
+            pass
+        try:
+            if pd.isna(v):
+                is_null = True
+        except (TypeError, ValueError):
+            pass
+
+    if is_null:
+        if k == "cuisines":
+            return []
+        if k == "metadata":
+            return {}
+        if k == "budget_band":
+            return "unknown"
+        if k in {"id", "name", "location"}:
+            return "Unknown"
+        return None
+
+    # Clean string representation of NaN
+    if isinstance(v, str):
+        s = v.strip()
+        if s.lower() in {"nan", "none", "null", "na", "n/a", ""}:
+            if k in {"locality", "location"}:
+                return None if k == "locality" else "Unknown"
+            if k == "cuisines":
+                return []
+            if k == "metadata":
+                return {}
+            if k == "budget_band":
+                return "unknown"
+            if k in {"id", "name"}:
+                return "Unknown"
+        return s
+
+    return v
+
+
 def load_processed_snapshot(path: str | Path) -> list[Restaurant]:
-    import math
     target = Path(path)
     if not target.is_file():
         raise DatasetLoadError(f"Processed snapshot not found: {target}")
@@ -36,17 +90,10 @@ def load_processed_snapshot(path: str | Path) -> list[Restaurant]:
     
     restaurants = []
     for row in frame.to_dict(orient="records"):
-        cleaned = {}
-        for k, v in row.items():
-            if isinstance(v, (list, dict, tuple)):
-                cleaned[k] = v
-            else:
-                try:
-                    cleaned[k] = None if pd.isna(v) else v
-                except (TypeError, ValueError):
-                    cleaned[k] = v
+        cleaned = {k: _clean_snapshot_value(k, v) for k, v in row.items()}
         restaurants.append(Restaurant.model_validate(cleaned))
     return restaurants
+
 
 
 class RestaurantRepository:

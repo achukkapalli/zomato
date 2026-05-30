@@ -16,8 +16,30 @@ _COST_RANGE = re.compile(r"(\d[\d,]*)\s*-\s*(\d[\d,]*)")
 _COST_NUMBER = re.compile(r"(\d[\d,]*)")
 
 
+def _is_nan(value: object) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, float):
+        import math
+        if math.isnan(value):
+            return True
+    try:
+        import numpy as np
+        if isinstance(value, (np.float64, np.float32, np.float16)) and np.isnan(value):
+            return True
+    except ImportError:
+        pass
+    try:
+        import pandas as pd
+        if pd.isna(value):
+            return True
+    except (TypeError, ValueError, ImportError):
+        pass
+    return False
+
+
 def normalize_city(city: str | None) -> str:
-    if not city or not str(city).strip():
+    if _is_nan(city):
         return ""
     cleaned = " ".join(str(city).strip().split())
     key = cleaned.casefold()
@@ -28,7 +50,7 @@ def normalize_city(city: str | None) -> str:
 
 def parse_rating(value: object | None) -> float | None:
     """Parse Zomato rate strings such as '4.1/5', 'NEW', or '-'."""
-    if value is None:
+    if _is_nan(value):
         return None
     text = str(value).strip()
     if not text or text.upper() in {"NEW", "-", "NA", "N/A"}:
@@ -49,7 +71,7 @@ def parse_rating(value: object | None) -> float | None:
 
 def parse_cost(value: object | None) -> float | None:
     """Parse cost-for-two: '300', '1,200', '300-400', or currency-prefixed strings."""
-    if value is None:
+    if _is_nan(value):
         return None
     text = str(value).strip()
     if not text or text.upper() in {"-", "NA", "N/A"}:
@@ -68,12 +90,13 @@ def parse_cost(value: object | None) -> float | None:
 
 
 def parse_cuisines(value: object | None) -> list[str]:
-    if value is None:
+    if _is_nan(value):
         return []
     text = str(value).strip()
     if not text:
         return []
     return [part.strip() for part in text.split(",") if part.strip()]
+
 
 
 def assign_budget_band(
@@ -138,7 +161,11 @@ def preprocess_row(
         or str(resolve_column(raw_row, "locality") or "")
     )
     locality_val = resolve_column(raw_row, "locality")
-    locality = str(locality_val).strip() if locality_val else None
+    locality = None
+    if not _is_nan(locality_val):
+        s = str(locality_val).strip()
+        if s and s.lower() not in {"nan", "none", "null", "na", "n/a"}:
+            locality = s
 
     cuisines = parse_cuisines(resolve_column(raw_row, "cuisines"))
     rating = parse_rating(resolve_column(raw_row, "rate"))
