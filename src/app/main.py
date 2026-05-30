@@ -13,6 +13,14 @@ from typing import Any, Callable
 import streamlit as st
 from pydantic import ValidationError
 
+import sys
+from pathlib import Path
+
+# Add project root to sys.path to resolve config and src imports on Streamlit Cloud
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from config.settings import get_settings
 from src.app.pipeline import run_recommendation
 
