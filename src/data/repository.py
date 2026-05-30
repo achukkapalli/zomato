@@ -36,10 +36,15 @@ def load_processed_snapshot(path: str | Path) -> list[Restaurant]:
     
     restaurants = []
     for row in frame.to_dict(orient="records"):
-        cleaned = {
-            k: (None if (isinstance(v, float) and math.isnan(v)) else v)
-            for k, v in row.items()
-        }
+        cleaned = {}
+        for k, v in row.items():
+            if isinstance(v, (list, dict, tuple)):
+                cleaned[k] = v
+            else:
+                try:
+                    cleaned[k] = None if pd.isna(v) else v
+                except (TypeError, ValueError):
+                    cleaned[k] = v
         restaurants.append(Restaurant.model_validate(cleaned))
     return restaurants
 
