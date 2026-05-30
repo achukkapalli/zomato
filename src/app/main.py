@@ -63,6 +63,11 @@ html, body, [class*="stApp"]{
   color: var(--text) !important;
 }
 
+/* Ensure default text, markdown, and labels are dark and high-contrast */
+span, p, label, li, h1, h2, h3, div {
+  color: inherit;
+}
+
 /* Remove Streamlit chrome */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -113,6 +118,7 @@ div.stButton > button:hover {
   border: 1px solid rgba(228,190,188,0.65);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow1);
+  color: var(--text) !important;
 }
 .z-card-pad{ padding: 1rem 1rem; }
 
@@ -122,9 +128,10 @@ div.stButton > button:hover {
   letter-spacing: -0.02em;
   font-weight: 700;
   margin: 0;
+  color: var(--text) !important;
 }
 .z-subtitle{
-  color: var(--muted);
+  color: var(--muted) !important;
   font-size: 14px;
   line-height: 20px;
   margin-top: 0.25rem;
@@ -133,7 +140,7 @@ div.stButton > button:hover {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--muted);
+  color: var(--muted) !important;
 }
 .z-chip{
   display: inline-flex;
@@ -142,33 +149,53 @@ div.stButton > button:hover {
   padding: 6px 12px;
   border: 1px solid rgba(228,190,188,0.85);
   border-radius: 9999px;
-  color: var(--muted);
-  background: #fff;
+  color: var(--muted) !important;
+  background: #fff !important;
   font-size: 12px;
   font-weight: 700;
 }
 .z-chip-primary{
-  border-color: rgba(183,18,42,0.35);
-  color: var(--primary);
-  background: rgba(183,18,42,0.06);
+  border-color: rgba(183,18,42,0.35) !important;
+  color: var(--primary) !important;
+  background: rgba(183,18,42,0.06) !important;
 }
 .z-banner{
   border-radius: var(--r-lg);
   border: 1px solid rgba(0,100,146,0.25);
   background: rgba(0,100,146,0.06);
   padding: 1rem 1rem;
+  color: var(--text) !important;
 }
 
-/* Inputs */
+/* Inputs styling with forced text color for readability on mobile/dark-mode */
 div[data-baseweb="select"] > div{
   background: var(--surface-low) !important;
   border: none !important;
   border-radius: 12px !important;
 }
+div[data-baseweb="select"] div,
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] input,
+div[data-baseweb="select"] svg {
+  color: var(--text) !important;
+  fill: var(--text) !important;
+}
+
+/* Selectbox dropdown lists */
+div[role="listbox"] li,
+div[role="listbox"] div {
+  color: var(--text) !important;
+  background-color: var(--surface) !important;
+}
+
 div[data-baseweb="textarea"] textarea{
   background: var(--surface-low) !important;
   border: none !important;
   border-radius: 12px !important;
+  color: var(--text) !important;
+}
+div[data-baseweb="textarea"] textarea::placeholder {
+  color: rgba(91,64,63,0.6) !important;
 }
 
 /* Radio as segmented (budget) */
@@ -182,6 +209,45 @@ div[role="radiogroup"] label{
   border-radius: 10px !important;
   padding: 8px 10px !important;
   margin: 0 4px !important;
+  color: var(--text) !important;
+}
+div[role="radiogroup"] label p,
+div[role="radiogroup"] label span,
+div[role="radiogroup"] label div {
+  color: var(--text) !important;
+}
+
+/* Slider ticks and values */
+div[data-testid="stSlider"] span,
+div[data-testid="stSlider"] div {
+  color: var(--text) !important;
+}
+
+/* Responsive Rules for Mobile Devices */
+@media (max-width: 768px) {
+  .z-title {
+    font-size: 26px !important;
+    line-height: 32px !important;
+  }
+  .z-subtitle {
+    font-size: 13px !important;
+    line-height: 18px !important;
+  }
+  .block-container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  /* Force columns to stack vertically on small screens */
+  div[data-testid="column"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+  }
+  /* Stacking columns layout */
+  div[data-testid="stHorizontalBlock"] {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
 }
 </style>
         """,
